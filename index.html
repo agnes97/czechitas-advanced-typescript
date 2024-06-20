@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced TypeScript</title>
+    <link rel="stylesheet" href="index.css" />
+    <script src="scripts/index.js"></script>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/gif" href="favicon.gif" />
+
+  </head>
+
+  <body class="flex-column">
+    <header>
+      <span>✨</span>
+      <h1>Advanced TypeScript</h1>
+      <span class="flipped">✨</span>
+    </header>
+
+    <div class="content flex-column">
+      <section>
+        <h2>Literal Types</h2>
+
+        <p>
+          Většinou si vystačíme s takzvanými primitivními typy, které už dobře
+          znáte - to je třeba string nebo number. Co když se ale stane, že
+          potřebujeme pouze specifický string - tj. nechceme typ
+          <code>string</code>, ale typ <code>yellow</code>? Použití hodnoty
+          místo obyčejného typu se říká <code>literal types</code> a v základu
+          je to velice jednoduché. Představme si, že vyrábíme aplikaci pro
+          květinářství a potřebujeme si zadefinovat typ pro květiny:
+        </p>
+        <pre><code class="codeblock">
+type Flower = {
+    name: 'rose' | 'tulip' | 'sunflower';
+    color: 'yellow' | 'red' | 'pink';
+    hasThorns: boolean;
+}</code></pre>
+
+        <p>
+          Nemůžeme si jen tak vymyslet nový druh květiny nebo barvu, kterou naše
+          květinářství nemá a nemůže prodávat. Kdyby
+          <code>name</code> nebo <code>color</code> byly jen
+          <code>string</code>, mohly by se nám do aplikace dostat vážné bugy.
+          Když je ale zadefinujeme jako v příkladu nahoře, TypeScript na nás
+          bude v kódu křičet, kdykoli bychom se pokusili definovat
+          barvu/květinu, kterou jsme v typu nespecifikovali.
+        </p>
+
+        <p>
+          To těžší přichází ve chvíli, kdy květiny a barvy potřebujeme na více
+          místech. Druh květin, které v našem květinářství prodáváme,
+          potřebujeme ve vyhledávání, v hlavičce stránky, na detailu květiny pro
+          doporučení ostatních... ale květiny v reálné aplikaci nebudeme mít
+          pouze tři, takže bychom napříč aplikací museli pořád dokola v typech a
+          props definovat třeba dvacet druhů květin. Nakonec by se nám někde
+          stalo, že nám na jednom místě květiny chybí a na druhém přidáváme
+          neexistující a nikdo by nevěděl, kde je vlastně pravda. Tady se můžete
+          setkat s termínem SSOT -
+          <i>"Single Source Of Truth"</i>, jediný zdroj pravdy, a zrovna při
+          vývoji určitě chceme vědět, co pro nás SSOT je a odkazovat se k němu
+          místo duplikace definicí.
+        </p>
+        <pre><code class="codeblock">
+const flowers = ['rose', 'sunflower', 'tulip'];
+const colors = ['yellow', 'red', 'pink', 'white'];</code></pre>
+
+        <p>
+          To už je lepší. Náš SSOT budou proměnné <code>flowers</code> a
+          <code>colors</code>, které máme v aplikaci vypsané pouze na jednom
+          místě. Jejich typ si TypeScript ale odvodí jako
+          <code>string[]</code> a to nám nestačí. Aby si TypeScript jejich typ
+          odvodil jako literal types, musíme mu trochu pomoct a to napsáním
+          <code>as const</code> za naše proměnné.
+        </p>
+        <pre><code class="codeblock">
+const flowers = ['rose', 'sunflower', 'tulip'] as const;
+const colors = ['yellow', 'red', 'pink', 'white'] as const;</code></pre>
+
+        <p>
+          Super! Když teď najedeme myškou na <code>flowers</code>, TypeScript už
+          nám zobrazí, že jejich typ není <code>string[]</code>, ale buď
+          <code>rose</code> nebo <code>sunflower</code> nebo <code>tulip</code>.
+          Teď už nám zbývá jenom tyhle typy použít v našem objektu a na to má
+          TypeScript speciální syntaxi, kterou si budete muset zapamatovat.
+        </p>
+        <pre><code class="codeblock">
+type Flower = (typeof flowers)[number];
+type Color = (typeof colors)[number];
+
+type Flower = {
+    name: Flower;
+    color: Color;
+    hasThorns: boolean;
+}</code></pre>
+
+        <p>
+          <code>typeof flowers</code> říká "tohle bude typu flowers", ale
+          <code>flowers</code> jsou pole, takže musíme specifikovat ještě
+          <code>[number]</code>.
+        </p>
+        <p>
+          <code>[number]</code> funguje jako index (proto je taky v hranatých
+          závorkách) a říká "tohle platí pro všechny jednotlivé možnosti tohohle
+          pole".
+        </p>
+      </section>
+
+      <section>
+        <h2>Keyof Type Operator</h2>
+        <p>
+          <code>keyof</code> operátor nám pomůže získat typ z klíčů objektu.
+        </p>
+        <pre><code class="codeblock">
+const fontWeights = {
+    normal: '400',
+    semibold: '600',
+    medium: '500',
+    bold: '700',
+    extrabold: '800',
+};
+
+type FontWeight = keyof typeof fontWeights;</code></pre>
+        <p>
+          <code>FontWeight</code> type je teď
+          <code>'normal' | 'semibold' | 'medium' | 'bold' | 'extrabold'</code>.
+        </p>
+
+        <p>
+          Kdy se nám něco takového může hodit? Podle výše zmíněného příkladu
+          třeba když budeme chtít uživateli umožnit změnit v jeho blog postu
+          font weight.
+        </p>
+
+        <pre><code class="codeblock">
+const [fontWeight, setFontWeight] = useState&lt;FontWeight&gt;('normal')
+
+function changeFontWeight(weight: FontWeight): void {
+    setFontWeight(weight);
+}</code></pre>
+      </section>
+
+      <section>
+        <h2>Test</h2>
+
+        <div class="flex-column test-questions">
+          <details>
+            <summary>
+              Je veškerý validní javascriptový kód zároveň validním
+              typescriptovým kódem?
+            </summary>
+            <p>
+              Ano! TypeScript je tzv. "superset" JavaScriptu. To znamená, že
+              obsahuje a umí totéž, co JavaScript, jenom ho rozšiřuje o typy. To
+              nám hodně ulehčuje přechod na TS ve velkých projektech - náš
+              projekt může kombinovat <code>.js</code> a
+              <code>.ts</code> soubory.
+            </p>
+
+            <img width="300" src="https://miro.medium.com/v2/resize:fit:687/1*pF4G32V9m63vRBRpY_qORQ.png" alt="">
+          </details>
+
+          <details>
+            <summary>
+              Co znamená otazník v typu <code>{ name?: string; }</code>
+            </summary>
+            <p>Property <code>name</code> je nepovinné.</p>
+          </details>
+
+          <details>
+            <summary>
+              Jaký je rozdíl mezi <code>null</code> a <code>undefined</code>?
+            </summary>
+            <p>Představte si, že máte knihovnu, ve které nejsou žádné knížky, protože jste tam žádné nedali. 
+            <p>Pokud jste na to jenom zapomněli, value knihovny by byla <code>undefined</code>. Knihovna existuje (proměnná je deklarovaná), ale nic v ní není, protože tam nikdo nic nedal.</p>
+            <p>Pokud jste do knihovny ale nic nedali schválně, víte, že tam nic nemá být, můžete jí přiřadit hodnotu naznačující "prázdnost" - <code>null</code>.</p>
+            <p><code>Null</code> musí někdo přiřadit, <code>undefined</code> je defaultně vše, co nemá nic přiřazené.</p>
+          </details>
+
+          <details>
+            <summary>
+              Co pro TypeScript znamená, když za proměnnou napíšu
+              <code>as const</code>?
+            </summary>
+            <p>Typ proměnné se bude řídit literal types, místo např. <code>string[]</code> bude přijímat pouze specifické stringy, které jsou v proměnné uložené.</code></p>
+          </details>
+
+          <details>
+            <summary>
+              Co je to <code>type inference</code>?
+            </summary>
+            <p>
+              TypeScript si spoustu typů odvodí sám i bez naší pomoci. Pokud do proměnné vložíme string <code>"hello"</code>, nemusíme specifikovat, že je to proměnná typu <code>string</code>. Stejně tak pokud třeba <code>useState("hello")</code> rovnou dostane "hello" jako initial hodnotu, TypeScript už ví, že do něj může nastavit pouze <code>string</code>. Pokud by ale initial hodnota byla prázdná <code>useState(null)</code>, TypeScript by si myslel, že žádnou jinou hodnotu než <code>null</code> state mít nemůže a musíme ho otypovat sami jako <code>useState&lt;string | null&gt;(null)</code>.
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              Proč by TypeScript měl být <code>devDependency</code>?
+            </summary>
+            <p><code>devDependencies</code>, tj. development dependencies, obsahují všechno, co potřebujete pouze při vývoji, ne do produkce/při nasazení (deploy) svojí stránky. Cokoli je tak označené, to např. Vite může při zpracování vašeho kódu přeskočit. TypeScript sem patří proto, že aby mohl běžet v JavaScriptovém prostředí (třeba prohlížeč), musí být zkompilovaný (přepsaný) do JavaScriptu. Vy jste se s tím nesetkaly, protože za vás kompilaci na pozadí řeší React při každém <code>npm start</code> nebo <code>npm build</code>.</p>
+          </details>
+
+          <details>
+            <summary>
+              Lze vytvořit nový typ ze dvou již existujících typů?
+            </summary>
+            <p>
+              <pre><code class="codeblock">
+interface NewType extends OldType {
+  newTypeProperty1: string;
+  newTypeProperty2: string;
+}</code></pre>
+nebo
+<pre><code class="codeblock">
+  type NewType & OldType = {
+    newTypeProperty1: string;
+    newTypeProperty2: string;
+  }</code></pre>
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              Můžeme TypeScriptu "lhát" a zpětně ho přesvědčit, že je nějaké proměnná jiného typu než si myslí?
+            </summary>
+            <p>Bohužel můžeme. Stačí za proměnnou přidat <code>as NewType</code>. Ideálně bychom to dělat neměli, protože pak ztrácí TypeScript smysl, ale může se stát, že si potřebujeme jen něco otestovat a tohle nám může pomoct. Kde se nám ještě může hodit je pokud od nepořádného kolegy dostaneme nějaké ošklivé <code>any</code>, ale my víme, že to je string a potřebujeme zjistit jeho délku, <code>as string</code> by nám pomohlo (a pak šup to <code>any</code> opravit!).</p>
+            <img width="300" src="https://img.devrant.com/devrant/rant/r_3015646_HZCi4.jpg" alt="">
+          </details>
+        </div>
+      </section>
+
+      <section>
+        <h2>Generics</h2>
+        <p>
+          Generiku už jsme si jednou ukazovali, pojďme se na ni přesto podívat
+          na jednodušším příkladu a vysvětlit, kdy ji můžeme potřebovat. Možná
+          už jste slyšeli o principu <code>DRY</code> (tj.
+          <i>"Neopakujme se."</i>, <i>"Don't repeat yourself."</i>), který nám s
+          tím pomůže. Jedním ze způsobů jak se vyhnout zbytečnému opakování je
+          totiž právě generika.
+        </p>
+        <p>
+          Představte si, že programujete web pro svůj oblíbený časopis a často
+          potřebujete potřebujete zvýraznit první element pole - jednou je to
+          první článek na blogu, podruhé první písmeno článku a tak dále. Funkce
+          na získání prvního elementu pole bude vypadat pokaždé stejně, liší se
+          jenom pole, která jí předáváte. Jednou to můžou být čísla, jindy
+          stringy. Mohli bychom napsat:
+        </p>
+        <p>
+          <code
+            >const getFirstLetter = (allLetters: string[]) =>
+            allLetters[0];</code
+          >
+        </p>
+        <p>
+          <code>const getFirstBlogPost = (posts: BlogPost[]) => posts[0];</code>
+        </p>
+        <p>
+          <code>const getFirstNumber = (numbers: number[]) => numbers[0];</code>
+        </p>
+        <p>Hmmm...</p>
+        <p>
+          Nezdá se vám to jako hodně opakování? V případě takhle krátké a jasné
+          funkce to nemusí vadit, ale úplně stejný princip bude platit i s
+          komponenty, které v Reactu budete chtít vyrábět maximálně
+          znovupoužitelné. Stejně tak nebudete chtít psát logiku
+          <code>useForm</code> hooku, který jsme si ukazovali minule, pokaždé
+          znovu jen proto, že váš formulář zpracovává jiná data.
+        </p>
+        <p>
+          S použitím generiky můžeme naše tři funkce na získání prvního prvku
+          pole spojit do jedné:
+        </p>
+        <p>
+          <code>const getFirstItem = &lt;T&gt;(item: T[]): T => item[0];</code>
+        </p>
+        <p>
+          <code>getFirstItem([1, 2, 3])</code> nám vrátí číslo <code>1</code>.
+          <code>getFirstItem(['a', 'b', 'c'])</code> nám vrátí <code>a</code>. A my už
+          se nemusíme opakovat. :)
+        </p>
+
+        <img width="300" src="https://tsh.io/wp-content/uploads/fly-images/18568/why-typescript-meme-500x649.png" alt="">
+      </section>
+
+      <section>
+        <h2>Utility Types</h2>
+        <p>
+          TypeScript nám poskytuje takzvané "utility types". Nemusíme je odnikud
+          importovat, stačí rovnou použít, a slouží nám k vyjádření opakující se
+          logiky.
+        </p>
+
+        <p>
+          Potřebujete vytvořit typ, který vypadá úplně stejně jako jiný, ale má
+          nějaké property navíc? Potřebujete zduplikovat existující typ, ale
+          všechny jeho properties jsou nepovinné? Tak to už je pro vás
+          připravené. Fungují na principu generiky, což už poznáte podle
+          <code>&lt; &gt;</code> zobáčků. To proto, že budou fungovat stejně pro
+          jakýkoli typ, který jim předáme.
+        </p>
+
+        <ul>
+          <li>
+            <h3>Pick&lt;Type, Keys&gt;</h3>
+            <p>
+              <code>Pick&lt;Type, Keys&gt;</code> nám umožňuje vytvořit nový typ
+              z properties jiného. Představte si, že má váš <code>User</code> v
+              typu properties jako
+              <code
+                >&#123; hobbies: Hobby[]; favoriteAnimal: 'dog' | 'cat'
+                &#125;</code
+              >. Až budete chtít třeba <code>favoriteAnimal</code> použít na
+              vypsání těchto properties v nějaké komponentě nebo předáním v
+              props, budete muset znovu specifikovat všechny možnosti. A pak se
+              taky může lehce stát, že na jednom místě může být
+              <code>favoriteAnimal</code> jenom pes nebo kočka, na jiném ale i
+              papoušek, kterému se pak nezobrazí ikonka, protože o něm polovina
+              typů neví.
+            </p>
+            <p>
+              Abyste se tomu vyhnuli, můžete si props komponenty
+              <code>FavoriteAnimal</code> vytvořit přímo z typu uživatele.
+            </p>
+            <pre><code class="codeblock">
+type User = {
+    name: string;
+    age: number
+    hobbies: Hobby[];
+    favoriteAnimal: 'dog' | 'cat' | 'parrot';
+}
+
+type Props = Pick&lt;User, 'favoriteAnimal'&gt;;
+
+export const FavoriteAnimal: FC&lt;Props&gt; = (props) => &lt;div&gt;{props.favoriteAnimal}&lt;/div&gt;;</code></pre>
+          </li>
+
+          <li>
+            <h3>Omit&lt;Type, Keys&gt;</h3>
+            <p>
+              <code>Omit&lt;Type, Keys&gt;</code> nám pomáhá vytvořit nový typ z
+              již existujícího stejně jako <code>Pick</code>, ale navíc s
+              možností vynechat properties, které nepotřebujeme.
+            </p>
+            <p>
+              Zůstaňme u předchozího příkladu. Komponenta
+              <code>FavoriteAnimal</code> je hotová, property
+              <code>favoriteAnimal</code> už tedy pro zobrazení zbytku informací
+              o našem uživateli nepotřebujeme. <code>Omit</code> nám umožní
+              tohle zadefinovat jediným řádkem.
+            </p>
+
+            <pre><code class="codeblock">
+type Props = Omit&lt;User, 'favoriteAnimal'&gt;;
+
+export const UserInfo: FC&lt;Props&gt; = ({ name, age, hobbies }) => ...;</code></pre>
+          </li>
+
+          <li>
+            <h3>Partial&lt;Type&gt;</h3>
+            <p>
+              <code>Partial&lt;Type&gt;</code> nemusí mít na první pohled jasné
+              využití. Zní, jako že si vybereme jen "part" (část) typu, ale na
+              to přece máme <code>Pick</code>. Abychom mu porozuměli, musíme si
+              nejdřív zopakovat, co v typu znamená <code>?</code>. Otazník
+              označuje nepovinnost. Například z typu <code>User</code>, který je
+              <code>&#123; name: string; age?: number &#125;</code>, tak můžeme
+              na první pohled odvodit, že vždycky musí mít jméno, ale jen může
+              (nebo nemusí) mít definovaný věk. A co tedy dělá
+              <code>Partial</code>? Jednoduše všem properties přidá
+              <code>?</code>. Jakýkoli typ, který mu genericky předáme, tak
+              obsahuje jenom nepovinné properties.
+            </p>
+
+            <p>
+              A příklad použití v praxi? Představte si, že máte vyrobit
+              formulář, ve kterém si uživatel mění svoje kontaktní údaje. Někdy
+              si vyplní telefon, někdy e-mail, někdy adresu. Formulář ale může
+              odeslat i kdyby vyplnil jen jednu z daných možností, tedy
+              potřebuje typ, kde budou všechny možné properties uživatele, ale
+              všechny nepovinné.
+            </p>
+
+            <pre><code class="codeblock">
+interface User {
+    name: string;
+    email: string;
+    phone?: string;
+    address?: string;
+}
+    
+function updateUserDetails(user: User, details: Partial&lt;User&gt;): User {
+    return { ...user, ...details };
+}</code></pre>
+          </li>
+
+          <li>
+            <h3>Record&lt;Key, Type&gt;</h3>
+            <p>
+              <code>Record&lt;Key, Type&gt;</code> za nás vytváří typ pro
+              objekt, o kterém víme, že všechny jeho keys budou stejného typu a
+              všechny jeho values budou stejného typu.
+            </p>
+            <p>
+              Co si pod tím představit? Děláme aplikaci pro květinářství a
+              uživatelé si chtějí vybírat podle barev. Vytvoříme si (nebo
+              dostaneme z backendu) seznam barev a seznam květin.
+            </p>
+            <pre><code class="codeblock">
+const flowers = ['rose', 'sunflower', 'tulip'] as const;
+const colors = ['yellow', 'red', 'pink', 'white'] as const;
+
+type Flower = (typeof flowers)[number]; 
+type Color = (typeof colors)[number];</code></pre>
+            <p>
+              Spojit je dohromady je jednoduché a máme mnoho možností, pro účely
+              našeho příkladu to bude následující objekt:
+            </p>
+            <pre><code class="codeblock">
+const flowerColors = {
+    yellow: ['sunflower'],
+    red: ['rose', 'tulip'],
+    pink: ['rose', 'tulip'],
+    white: ['rose'],
+};</code></pre>
+            <p>
+              Čeho si můžeme všimnout je, že klíč našeho objektu je vždycky
+              color a value je pole flowers. <code>Record</code> nám umožní
+              tohle shrnout do jednoho typu.
+            </p>
+            <pre><code class="codeblock">
+type FlowerColors = Record&lt;Color, Flower[]&gt;;</code></pre>
+          </li>
+
+          <li>
+            <h3>Readonly&lt;Type&gt; & ReadonlyArray&lt;Type&gt;</h3>
+            <p>
+              Poslední utility type, který si představíme, je
+              <code>Readonly&lt;Type&gt;</code> pro objekty a
+              <code>ReadonlyArray&lt;Type&gt;</code> pro pole.
+            </p>
+            <p>
+              Tady nás nečeká žádný chyták "read only" (pouze ke čtení) opravdu
+              znamená, že typ je pouze ke čtení.
+            </p>
+            <p>
+              V Reactu je populární <i>funkcionální přístup</i>. Pod něj patří
+              třeba <i>immutability</i>, se kterou jste se v tomhle kurzu už
+              potkali a umíte do pole přidávat prvky takhle
+              <code>[...previous, new]</code>
+              místo <code>.push</code> metody. Problém je, že JavaScript nám
+              dovoluje občas dělat dost ošklivé věci. I na pole definované ne
+              jako <code>let</code>, ale jako <code>const</code>, můžeme použít
+              metodu <code>.push</code> a přidat tak do něj další prvek.
+              Readonly typ je taková bariéra, kterou si sami můžeme postavit,
+              abychom měli jistotu, že se do našeho pole nebo objektu opravdu
+              nedostane žádná nechtěnná změna - TypeScript by okamžitě křičel.
+            </p>
+            <pre><code class="codeblock">
+const arrayOfNumbers: ReadonlyArray&lt;number&gt; = [1, 2, 3]
+
+type Props = Readonly&lt;{
+    name: string;
+    age: number;
+}&gt;;</code></pre>
+            <p>
+              Tyhle dva utility typy pravděpodobně samy od sebe moc používate
+              nebudete, ale měly bystě vědět, co znamenají, když na ně v budoucí
+              práci narazíte.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Cvičení</h2>
+        <p>
+          Pokud nám zbyde čas na cvičení, byli bychom rádi, kdybyste nevytvářeli
+          nový projekt, ale sáhly po tom posledním, který máte rozdělaný - ten,
+          který máte nejvíc v paměti. Samy si tak můžete vybrat koncept z dnešní
+          lekce, který vám byl nejvíc sympatický, a zkusit ho implementovat.
+        </p>
+
+        <p>Může to být třeba:</p>
+        <ul>
+          <li class="numbered-li">
+            udělat nějakou funkci znovupoužitelnou tím, že do ní zavedete
+            generické <code>&lt;T&gt;</code>
+          </li>
+          <li class="numbered-li">
+            použít literal types na místech, kde jste doteď měli
+            <code>string[]</code> nebo <code>number[]</code>
+          </li>
+          <li class="numbered-li">
+            použít <code>Pick</code> nebo <code>Omit</code> utility type při
+            posílání props podobných nějakému objektu
+          </li>
+          <li class="numbered-li">
+            otypovat objekt pomocí <code>Record</code> utility typu
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <footer>Jana Mácová &copy; 2024</footer>
+  </body>
+</html>
