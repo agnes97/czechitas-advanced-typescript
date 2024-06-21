@@ -13,9 +13,9 @@
 
   <body class="flex-column">
     <header>
-      <span>✨</span>
+      <span class="desktop-only">✨</span>
       <h1>Advanced TypeScript</h1>
-      <span class="flipped">✨</span>
+      <span class="flipped desktop-only">✨</span>
     </header>
 
     <div class="content flex-column">
@@ -86,11 +86,11 @@ const colors = ['yellow', 'red', 'pink', 'white'] as const;</code></pre>
           TypeScript speciální syntaxi, kterou si budete muset zapamatovat.
         </p>
         <pre><code class="codeblock">
-type Flower = (typeof flowers)[number];
+type Name = (typeof flowers)[number];
 type Color = (typeof colors)[number];
 
 type Flower = {
-    name: Flower;
+    name: Name;
     color: Color;
     hasThorns: boolean;
 }</code></pre>
@@ -158,7 +158,7 @@ function changeFontWeight(weight: FontWeight): void {
               <code>.ts</code> soubory.
             </p>
 
-            <img width="300" src="https://miro.medium.com/v2/resize:fit:687/1*pF4G32V9m63vRBRpY_qORQ.png" alt="">
+            <img width="300" src="/assets/js-vs-ts.png" alt="">
           </details>
 
           <details>
@@ -226,7 +226,7 @@ nebo
               Můžeme TypeScriptu "lhát" a zpětně ho přesvědčit, že je nějaké proměnná jiného typu než si myslí?
             </summary>
             <p>Bohužel můžeme. Stačí za proměnnou přidat <code>as NewType</code>. Ideálně bychom to dělat neměli, protože pak ztrácí TypeScript smysl, ale může se stát, že si potřebujeme jen něco otestovat a tohle nám může pomoct. Kde se nám ještě může hodit je pokud od nepořádného kolegy dostaneme nějaké ošklivé <code>any</code>, ale my víme, že to je string a potřebujeme zjistit jeho délku, <code>as string</code> by nám pomohlo (a pak šup to <code>any</code> opravit!).</p>
-            <img width="300" src="https://img.devrant.com/devrant/rant/r_3015646_HZCi4.jpg" alt="">
+            <img width="300" src="/assets/as-any.jpg" alt="">
           </details>
         </div>
       </section>
@@ -283,7 +283,7 @@ nebo
           se nemusíme opakovat. :)
         </p>
 
-        <img width="300" src="https://tsh.io/wp-content/uploads/fly-images/18568/why-typescript-meme-500x649.png" alt="">
+        <img width="300" src="/assets/generics.png" alt="">
       </section>
 
       <section>
@@ -413,7 +413,7 @@ function updateUserDetails(user: User, details: Partial&lt;User&gt;): User {
 const flowers = ['rose', 'sunflower', 'tulip'] as const;
 const colors = ['yellow', 'red', 'pink', 'white'] as const;
 
-type Flower = (typeof flowers)[number]; 
+type Name = (typeof flowers)[number]; 
 type Color = (typeof colors)[number];</code></pre>
             <p>
               Spojit je dohromady je jednoduché a máme mnoho možností, pro účely
@@ -432,7 +432,7 @@ const flowerColors = {
               tohle shrnout do jednoho typu.
             </p>
             <pre><code class="codeblock">
-type FlowerColors = Record&lt;Color, Flower[]&gt;;</code></pre>
+type FlowerColors = Record&lt;Color, Name[]&gt;;</code></pre>
           </li>
 
           <li>

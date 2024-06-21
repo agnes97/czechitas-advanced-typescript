@@ -9,7 +9,7 @@ body {
   width: 100vw;
   min-height: 100vh;
   margin: 0;
-  padding: 2rem 0;
+  padding: 3rem 0;
   color: var(--color-beige);
   counter-reset: section;
   background-color: var(--color-green-dark);
@@ -27,7 +27,8 @@ header {
 h1 {
   color: var(--color-beige);
   font-size: clamp(1rem, 3rem, 4rem);
-  margin-block-end: 0.5rem;
+  margin-block: 3rem 0;
+  text-align: center;
 }
 
 h2 {
@@ -97,6 +98,11 @@ img {
   color: var(--color-green-dark);
   padding: 1rem 2rem 2rem 2rem;
   overflow: auto;
+
+  @media (max-width: 400px) {
+    width: 100%;
+    margin: 0 -2rem;
+  }
 }
 
 .flex-column {
@@ -114,10 +120,16 @@ img {
 .content {
   background-color: var(--color-beige);
   min-height: 100vh;
-  width: 70%;
-  padding: 2rem 6rem 6rem 6rem;
-  border-radius: 5%;
   color: var(--color-green-dark);
+  width: calc(100% - 4rem);
+  padding: 0 2rem;
+  overflow: hidden;
+
+  @media (min-width: 400px) {
+    border-radius: 5%;
+    width: 70%;
+    padding: 2rem 6rem 6rem 6rem;
+  }
 }
 
 .flipped {
@@ -135,4 +147,12 @@ img {
 .numbered-li {
   list-style: "→ ";
   margin-left: 2rem;
+}
+
+.desktop-only {
+  display: none;
+
+  @media (min-width: 800px) {
+    display: block;
+  }
 }
